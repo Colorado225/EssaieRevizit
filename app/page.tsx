@@ -11,14 +11,20 @@ const products = [
 ]
 
 export default function Home() {
-  const [cart, setCart] = useState(0), [menu, setMenu] = useState(false), [liked, setLiked] = useState<number[]>([])
+  const [cart, setCart] = useState(0), [menu, setMenu] = useState(false), [liked, setLiked] = useState<number[]>([]), [searchOpen, setSearchOpen] = useState(false)
+  const addToCart = () => setCart((count) => count + 1)
   return <main className="min-h-screen overflow-hidden bg-[var(--paper)]">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+    </div>
     <div className="bg-[var(--cobalt)] px-5 py-2 text-center text-[10px] font-bold uppercase tracking-[.25em] text-white">Livraison offerte à Abidjan dès 75 000 FCFA <span className="mx-2 text-[var(--gold)]">✦</span> Paiement Wave disponible</div>
     <header className="relative z-20 mx-auto flex max-w-[1320px] items-center justify-between px-5 py-6 md:px-10">
       <button aria-label="Menu" onClick={()=>setMenu(!menu)} className="flex size-10 items-center justify-center rounded-full border border-black/10 md:hidden">{menu?<X/>:<Menu/>}</button>
       <a href="/" aria-label="Revizit, accueil" className="font-display text-3xl font-semibold tracking-tight">Revizit<span className="text-[var(--rust)]">.</span></a>
       <nav className={`${menu?'flex':'hidden'} absolute left-4 right-4 top-20 flex-col gap-5 rounded-2xl bg-[var(--ink)] p-6 text-white md:static md:flex md:flex-row md:items-center md:bg-transparent md:p-0 md:text-[var(--ink)]`}><a href="#shop" className="text-xs font-bold uppercase tracking-[.18em]">La boutique</a><a href="#story" className="text-xs font-bold uppercase tracking-[.18em]">Notre histoire</a><a href="#journal" className="text-xs font-bold uppercase tracking-[.18em]">Le journal</a></nav>
-      <div className="flex items-center gap-2"><button aria-label="Rechercher" className="hidden size-10 items-center justify-center rounded-full border border-black/10 md:flex"><Search/></button><button aria-label="Panier" onClick={()=>setCart(cart+1)} className="relative flex size-10 items-center justify-center rounded-full bg-[var(--ink)] text-white"><ShoppingBag/><span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[var(--rust)] text-[9px] font-bold">{cart}</span></button></div>
+      <div className="flex items-center gap-2"><button aria-label="Rechercher" onClick={()=>setSearchOpen(!searchOpen)} className="hidden size-10 items-center justify-center rounded-full border border-black/10 transition-transform hover:-rotate-12 md:flex"><Search/></button><button aria-label="Panier" onClick={addToCart} className="relative flex size-10 items-center justify-center rounded-full bg-[var(--ink)] text-white transition-transform hover:scale-110"><ShoppingBag/><span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[var(--rust)] text-[9px] font-bold">{cart}</span></button></div>
+      {searchOpen && <div className="search-pop absolute right-5 top-20 z-30 flex items-center gap-3 rounded-full border border-black/10 bg-[var(--paper)] px-4 py-3 shadow-xl md:right-10"><Search/><input autoFocus aria-label="Rechercher dans Revizit" placeholder="Rechercher une pièce" className="w-48 bg-transparent text-sm outline-none placeholder:text-black/40" /></div>}
     </header>
     <section className="mx-auto grid max-w-[1320px] gap-8 px-5 pb-20 md:grid-cols-[1.05fr_.95fr] md:items-center md:px-10 md:pb-32">
       <div className="relative z-10 pt-10 md:pt-20"><p className="mb-7 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[.3em] text-[var(--rust)]"><span className="size-2 rounded-full bg-[var(--rust)]"/> Collection 01 · Héritage</p><h1 className="font-display max-w-[700px] text-[clamp(4rem,8vw,8rem)] leading-[.84] tracking-[-.055em]">L&apos;Afrique<br/><i className="font-normal text-[var(--rust)]">en mouvement.</i></h1><p className="mt-8 max-w-[420px] text-base leading-7 text-black/60">Des pièces qui racontent nos terres, nos gestes et celles et ceux qui les font vivre. La mode ivoirienne, autrement.</p><a href="#shop" className="mt-9 inline-flex items-center gap-4 rounded-full bg-[var(--rust)] px-7 py-4 text-xs font-bold uppercase tracking-[.18em] text-white transition-transform hover:scale-105">Découvrir la collection <ArrowRight/></a></div>
