@@ -81,9 +81,9 @@ export default function Home() {
           Revizit<span className="text-[var(--rust)]">.</span>
         </a>
         <nav className={`${menu ? 'flex' : 'hidden'} absolute left-4 right-4 top-16 flex-col gap-4 rounded-2xl bg-[var(--ink)] p-5 text-white md:static md:flex md:flex-row md:items-center md:gap-8 md:bg-transparent md:p-0 md:text-[var(--ink)]`}>
-          <a href="#arrivals" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Arrivages</a>
-          <a href="#collections" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Collections</a>
-          <a href="#shop" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Boutique</a>
+          <a href="/arrivages" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Arrivages</a>
+          <a href="/collections" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Collections</a>
+          <a href="/boutique" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Boutique</a>
         </nav>
         <button aria-label="Panier" onClick={() => setCartOpen(true)} className="relative flex size-10 items-center justify-center rounded-full bg-[var(--ink)] text-white transition hover:scale-110">
           <ShoppingBag size={18} />
