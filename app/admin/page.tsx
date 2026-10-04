@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardList,
+  Image,
   LayoutDashboard,
   Menu,
   Package,
@@ -33,6 +34,7 @@ const nav = [
   { label: 'Catalogue', icon: Package, href: '/admin/catalogue' },
   { label: 'Stocks', icon: Package, href: '/admin/stocks' },
   { label: 'Contenus', icon: Sparkles, href: '/admin/cms' },
+  { label: 'Médiathèque', icon: Image, href: '/admin/media' },
   { label: 'Clients', icon: Users, href: '/admin' },
 ]
 
