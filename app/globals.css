@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+:root { --ink:#171512; --paper:#f4f0e9; --cream:#ebe4d8; --cobalt:#193c54; --rust:#b85b3c; --gold:#c89a55; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans',sans-serif; }
+.font-display { font-family:'Playfair Display',serif; }
+::selection { background:var(--rust); color:white; }
+@keyframes drift { 0%,100% { transform:translate3d(0,0,0) rotate(0deg); } 50% { transform:translate3d(18px,-12px,0) rotate(2deg); } }
+@keyframes marquee { to { transform:translateX(-50%); } }
+.drift { animation:drift 9s ease-in-out infinite; }
+.marquee-track { animation:marquee 28s linear infinite; }
+.noise { background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E"); }
