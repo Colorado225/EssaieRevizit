@@ -2,61 +2,362 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { ArrowRight, Check, ChevronDown, Heart, Instagram, Menu, Minus, Plus, Search, ShoppingBag, ShieldCheck, Sparkles, Truck, Undo2, X } from 'lucide-react'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
+import { ArrowRight, Check, Heart, Instagram, Mail, Menu, ShoppingBag, Star, Truck, X, ChevronRight } from 'lucide-react'
 
-type Product = { name: string; detail: string; price: number; image: string; tag: string; category: string; description: string }
+type Product = { 
+  name: string
+  detail: string
+  price: number
+  image: string
+  tag: string
+  category: string
+  description: string
+  new?: boolean
+}
 
 const products: Product[] = [
-  { name:'Robe Kô', detail:'Coton tissé · Indigo', price:89000, image:'/hero-fashion.png', tag:'Édition limitée', category:'Vêtements', description:'Une silhouette fluide et sculpturale, taillée dans un coton indigo tissé par notre atelier partenaire à Abidjan.' },
-  { name:'Ensemble Sassandra', detail:'Lin & bazin · Terre cuite', price:125000, image:'/product-indigo.png', tag:'Nouveau', category:'Vêtements', description:'Le tailoring décontracté de Revizit : un ensemble pensé pour passer du jour à la nuit avec naturel.' },
-  { name:'Sac N’Zassa', detail:'Cuir végétal · Fait main', price:48000, image:'/collection-heritage.png', tag:'Artisan local', category:'Accessoires', description:'Un sac compact aux textures généreuses, réalisé à la main et conçu pour accompagner tous vos mouvements.' },
+  { name: 'Robe Kô', detail: 'Coton tissé · Indigo', price: 89000, image: '/hero-fashion.png', tag: 'Édition limitée', category: 'Vêtements', description: 'Une silhouette fluide et sculpturale, taillée dans un coton indigo tissé par notre atelier partenaire à Abidjan.', new: true },
+  { name: 'Ensemble Sassandra', detail: 'Lin & bazin · Terre cuite', price: 125000, image: '/product-indigo.png', tag: 'Nouveau', category: 'Vêtements', description: 'Le tailoring décontracté de Revizit : un ensemble pensé pour passer du jour à la nuit avec naturel.' },
+  { name: 'Sac N\'Zassa', detail: 'Cuir végétal · Fait main', price: 48000, image: '/collection-heritage.png', tag: 'Artisan local', category: 'Accessoires', description: 'Un sac compact aux textures généreuses, réalisé à la main et conçu pour accompagner tous vos mouvements.' },
 ]
+
+const testimonials = [
+  { author: 'Ama K.', role: 'Avocate', text: 'Revizit, c\'est porter sa culture avec fierté. Chaque pièce raconte une histoire.', rating: 5 },
+  { author: 'Kwesi A.', role: 'Designer', text: 'La qualité et l\'éthique sont au cœur de chaque création. Je reviens toujours.', rating: 5 },
+  { author: 'Zara M.', role: 'Entrepreneur', text: 'C\'est l\'élégance consciente que j\'attendais. Merci Revizit.', rating: 5 },
+]
+
 const money = (value: number) => `${value.toLocaleString('fr-FR')} FCFA`
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.2 } },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+}
+
+const textVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+}
 
 export default function Home() {
   const [cart, setCart] = useState<Record<string, number>>({})
   const [menu, setMenu] = useState(false)
   const [liked, setLiked] = useState<string[]>([])
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('Tout')
   const [cartOpen, setCartOpen] = useState(false)
   const [selected, setSelected] = useState<Product | null>(null)
 
-  const filteredProducts = useMemo(() => products.filter((product) => {
-    const matchesCategory = category === 'Tout' || product.category === category
-    const matchesQuery = `${product.name} ${product.detail}`.toLowerCase().includes(query.toLowerCase())
-    return matchesCategory && matchesQuery
-  }), [category, query])
+  const filteredProducts = useMemo(() => products, [])
   const cartItems = products.filter((product) => cart[product.name])
   const cartCount = Object.values(cart).reduce((sum, value) => sum + value, 0)
   const cartTotal = cartItems.reduce((sum, product) => sum + product.price * cart[product.name], 0)
   const addToCart = (product: Product) => setCart((current) => ({ ...current, [product.name]: (current[product.name] || 0) + 1 }))
   const removeFromCart = (name: string) => setCart((current) => { const next = { ...current, [name]: current[name] - 1 }; if (next[name] <= 0) delete next[name]; return next })
 
-  return <main className="min-h-screen overflow-hidden bg-[var(--paper)]">
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden"><div className="ambient ambient-one" /><div className="ambient ambient-two" /></div>
-    <div className="bg-[var(--cobalt)] px-5 py-2 text-center text-[10px] font-bold uppercase tracking-[.25em] text-white">Livraison offerte à Abidjan dès 75 000 FCFA <span className="mx-2 text-[var(--gold)]">✦</span> Paiement Wave disponible</div>
-    <header className="relative z-20 mx-auto flex max-w-[1320px] items-center justify-between px-5 py-6 md:px-10">
-      <button aria-label="Menu" onClick={() => setMenu(!menu)} className="flex size-10 items-center justify-center rounded-full border border-black/10 md:hidden">{menu ? <X/> : <Menu/>}</button>
-      <a href="/" aria-label="Revizit, accueil" className="font-display text-3xl font-semibold tracking-tight">Revizit<span className="text-[var(--rust)]">.</span></a>
-      <nav className={`${menu ? 'flex' : 'hidden'} absolute left-4 right-4 top-20 flex-col gap-5 rounded-2xl bg-[var(--ink)] p-6 text-white md:static md:flex md:flex-row md:items-center md:bg-transparent md:p-0 md:text-[var(--ink)]`}><a href="#shop" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">La boutique</a><a href="#story" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Notre histoire</a><a href="#journal" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Le journal</a></nav>
-      <div className="flex items-center gap-2"><button aria-label="Rechercher" onClick={() => setSearchOpen(!searchOpen)} className="hidden size-10 items-center justify-center rounded-full border border-black/10 transition-transform hover:-rotate-12 md:flex"><Search/></button><button aria-label="Ouvrir le panier" onClick={() => setCartOpen(true)} className="relative flex size-10 items-center justify-center rounded-full bg-[var(--ink)] text-white transition-transform hover:scale-110"><ShoppingBag/><span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[var(--rust)] text-[9px] font-bold">{cartCount}</span></button></div>
-      {searchOpen && <div className="search-pop absolute right-5 top-20 z-30 flex items-center gap-3 rounded-full border border-black/10 bg-[var(--paper)] px-4 py-3 shadow-xl md:right-10"><Search/><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Rechercher dans Revizit" placeholder="Rechercher une pièce" className="w-48 bg-transparent text-sm outline-none placeholder:text-black/40" /></div>}
-    </header>
-    <section className="mx-auto grid max-w-[1320px] gap-8 px-5 pb-12 md:grid-cols-[1.05fr_.95fr] md:items-center md:px-10 md:pb-20"><div className="reveal-up relative z-10 pt-6 md:pt-12"><p className="mb-7 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[.3em] text-[var(--rust)]"><span className="size-2 rounded-full bg-[var(--rust)]"/> Collection 01 · Héritage</p><h1 className="font-display max-w-[700px] text-[clamp(4rem,8vw,8rem)] leading-[.84] tracking-[-.055em]">L&apos;Afrique<br/><i className="font-normal text-[var(--rust)]">en mouvement.</i></h1><p className="mt-8 max-w-[420px] text-base leading-7 text-black/60">Des pièces qui racontent nos terres, nos gestes et celles et ceux qui les font vivre. La mode ivoirienne, autrement.</p><a href="#shop" className="mt-9 inline-flex items-center gap-4 rounded-full bg-[var(--rust)] px-7 py-4 text-xs font-bold uppercase tracking-[.18em] text-white transition-transform hover:scale-105">Découvrir la collection <ArrowRight/></a></div><div className="reveal-up-delay relative mt-2 h-[440px] md:h-[560px]"><div className="absolute inset-4 rotate-3 rounded-[48%_48%_12%_12%] bg-[var(--gold)]/30 md:inset-10"/><div className="relative h-full overflow-hidden rounded-[48%_48%_12%_12%] bg-[var(--cobalt)]"><Image src="/hero-fashion.png" fill priority className="object-cover object-center mix-blend-luminosity opacity-90 transition-transform duration-700 hover:scale-105" alt="Modèle portant une création Revizit"/></div><div className="drift absolute -bottom-3 -left-4 flex size-28 rotate-[-12deg] items-center justify-center rounded-full bg-[var(--gold)] text-center text-[10px] font-bold uppercase leading-4 tracking-widest text-[var(--ink)] md:-left-8">Fait<br/>en Côte<br/>d&apos;Ivoire</div><div className="absolute right-0 top-12 rounded-full border border-white/40 bg-white/15 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur">01 / 03</div></div></section>
-    <div className="overflow-hidden border-y border-black/10 bg-[var(--cream)] py-4"><div className="marquee-track flex w-max gap-10 whitespace-nowrap text-[11px] font-bold uppercase tracking-[.3em]">{Array.from({length:8},(_,i)=><span key={i} className="flex items-center gap-10">Design conscient <b className="text-[var(--rust)]">✦</b> Créé en Côte d&apos;Ivoire <b className="text-[var(--rust)]">✦</b></span>)}</div></div>
-    <section id="shop" className="mx-auto max-w-[1320px] px-5 py-14 md:px-10 md:py-20"><div className="mb-12 flex flex-col gap-7 md:flex-row md:items-end md:justify-between"><div><p className="mb-4 text-[11px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">La sélection</p><h2 className="font-display text-5xl tracking-[-.04em] md:text-7xl">Pièces <i className="font-normal">singulières.</i></h2></div><div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer le catalogue">{['Tout','Vêtements','Accessoires'].map((item) => <button key={item} onClick={() => setCategory(item)} className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-widest transition ${category === item ? 'bg-[var(--ink)] text-white' : 'border border-black/15 hover:bg-black/5'}`}>{item}</button>)}</div></div>{filteredProducts.length ? <div className="grid gap-6 md:grid-cols-3">{filteredProducts.map((p)=><article key={p.name} className="group group-lift"><div className="relative aspect-[.82] overflow-hidden rounded-[28px] bg-[var(--cream)]"><button onClick={() => setSelected(p)} className="absolute inset-0 z-10" aria-label={`Voir ${p.name}`}><span className="sr-only">Voir les détails de {p.name}</span></button><Image src={p.image} fill className="object-cover transition duration-700 group-hover:scale-105" alt={p.name}/><span className="absolute left-4 top-4 rounded-full bg-[var(--paper)] px-3 py-2 text-[10px] font-bold uppercase tracking-widest">{p.tag}</span><button onClick={(event) => { event.stopPropagation(); setLiked(liked.includes(p.name) ? liked.filter((name) => name !== p.name) : [...liked, p.name]) }} aria-label="Ajouter aux favoris" className="absolute right-4 top-4 z-20 flex size-10 items-center justify-center rounded-full bg-[var(--paper)] transition hover:scale-110"><Heart className={liked.includes(p.name) ? 'fill-[var(--rust)] text-[var(--rust)]' : ''}/></button><button onClick={(event) => { event.stopPropagation(); addToCart(p); setCartOpen(true) }} className="absolute bottom-4 left-4 right-4 z-20 translate-y-16 rounded-full bg-[var(--ink)] py-4 text-xs font-bold uppercase tracking-widest text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">Ajouter au panier</button></div><button onClick={() => setSelected(p)} className="flex w-full items-start justify-between pt-5 text-left"><div><h3 className="font-display text-2xl">{p.name}</h3><p className="mt-1 text-sm text-black/50">{p.detail}</p></div><p className="text-sm font-bold">{money(p.price)}</p></button></article>)}</div> : <div className="rounded-3xl bg-[var(--cream)] p-10 text-center"><p className="font-display text-3xl">Aucune pièce trouvée.</p><button onClick={() => { setQuery(''); setCategory('Tout') }} className="mt-5 text-xs font-bold uppercase tracking-widest text-[var(--rust)]">Réinitialiser les filtres</button></div>}</section>
-    <section className="mx-auto max-w-[1320px] px-5 py-14 md:px-10 md:py-20"><div className="mb-10 flex items-end justify-between"><div><p className="mb-4 text-[11px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Nos univers</p><h2 className="font-display text-5xl tracking-[-.04em] md:text-7xl">Trouvez votre <i className="font-normal">expression.</i></h2></div><ArrowRight className="hidden text-[var(--rust)] md:block"/></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{[{name:'Femme', detail:'Robes · Ensembles', image:'/hero-fashion.png'}, {name:'Homme', detail:'Chemises · Boubous', image:'/product-indigo.png'}, {name:'Enfants', detail:'Cérémonie · Quotidien', image:'/collection-heritage.png'}, {name:'Accessoires', detail:'Sacs · Bijoux', image:'/collection-heritage.png'}, {name:'Ongles', detail:'Press-on · Nail art', image:'/product-indigo.png'}].map((item, index) => <a href="#shop" key={item.name} className="group relative min-h-64 overflow-hidden rounded-[26px] bg-[var(--ink)] p-5 text-white"><Image src={item.image} fill className="object-cover opacity-65 transition duration-700 group-hover:scale-110 group-hover:opacity-80" alt={`Univers ${item.name}`}/><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent"/><div className="relative flex h-full flex-col justify-end"><span className="mb-2 text-[10px] font-bold tracking-widest text-[var(--gold)]">0{index + 1}</span><h3 className="font-display text-3xl">{item.name}</h3><p className="mt-1 text-xs text-white/70">{item.detail}</p></div></a>)}</div></section>
-    <section className="mx-auto max-w-[1320px] px-5 py-14 md:px-10 md:py-20"><div className="grid gap-6 md:grid-cols-[1.1fr_.9fr]"><div className="relative min-h-[430px] overflow-hidden rounded-[32px] bg-[var(--cobalt)] p-8 text-white md:p-12"><Image src="/product-indigo.png" fill className="object-cover opacity-55 transition duration-700 hover:scale-105" alt="Mannequin portant une création ivoirienne"/><div className="absolute inset-0 bg-gradient-to-t from-[var(--ink)]/80 to-transparent"/><div className="relative flex h-full flex-col justify-end"><p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">Collection ivoirienne</p><h2 className="mt-3 max-w-md font-display text-5xl leading-[.9]">L&apos;élégance<br/><i className="font-normal text-[var(--gold)]">de chez nous.</i></h2><a href="#shop" className="mt-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">Découvrir l&apos;édition <ArrowRight/></a></div></div><div className="flex flex-col justify-center rounded-[32px] bg-[var(--rust)] p-8 text-white md:p-12"><p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">Your nails. Your statement.</p><h2 className="mt-4 font-display text-5xl leading-[.9]">Le détail qui<br/><i className="font-normal text-[var(--gold)]">change tout.</i></h2><p className="mt-7 max-w-sm text-sm leading-7 text-white/75">Des press-on nails et des créations personnalisées pour compléter chaque silhouette Revizit.</p><a href="#shop" className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">Découvrir les nails <ArrowRight/></a></div></div></section>
-    <section className="border-y border-black/10 bg-[var(--cream)]"><div className="mx-auto grid max-w-[1320px] md:grid-cols-3">{[{ icon: Truck, title: 'Livraison soignée', text: 'Abidjan en 24–48h, partout ailleurs en Côte d’Ivoire selon votre adresse.' }, { icon: ShieldCheck, title: 'Paiement sécurisé', text: 'Wave, Orange Money et paiement à la livraison disponibles.' }, { icon: Undo2, title: 'Échanges faciles', text: 'Une pièce ne vous convient pas ? Écrivez-nous sous 7 jours.' }].map(({ icon: Icon, title, text }) => <div key={title} className="flex gap-4 border-b border-black/10 px-5 py-8 last:border-0 md:border-b-0 md:border-r md:px-10 md:py-10 md:last:border-r-0"><Icon className="shrink-0 text-[var(--rust)]"/><div><h3 className="font-display text-xl">{title}</h3><p className="mt-2 text-sm leading-6 text-black/55">{text}</p></div></div>)}</div></section>
-    <section className="mx-auto max-w-[1320px] px-5 py-14 md:px-10 md:py-20"><div className="grid gap-6 md:grid-cols-2"><a href="#shop" className="group relative min-h-80 overflow-hidden rounded-[32px] bg-[var(--cobalt)] p-8 text-white md:p-12"><div className="absolute inset-0 bg-[url('/collection-heritage.png')] bg-cover bg-center opacity-35 transition duration-700 group-hover:scale-105"/><div className="relative flex h-full flex-col justify-end"><p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">01 · Le vestiaire</p><h2 className="mt-3 font-display text-4xl">Les essentiels<br/><i className="font-normal text-[var(--gold)]">du quotidien.</i></h2><span className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">Explorer <ArrowRight/></span></div></a><a href="#shop" className="group relative min-h-80 overflow-hidden rounded-[32px] bg-[var(--rust)] p-8 text-white md:p-12"><div className="absolute inset-0 bg-[url('/product-indigo.png')] bg-cover bg-center opacity-30 mix-blend-multiply transition duration-700 group-hover:scale-105"/><div className="relative flex h-full flex-col justify-end"><p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">02 · Le détail</p><h2 className="mt-3 font-display text-4xl">Accessoires<br/><i className="font-normal text-[var(--gold)]">avec caractère.</i></h2><span className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">Voir la sélection <ArrowRight/></span></div></a></div></section>
-    <section className="bg-[var(--cream)] px-5 py-24 md:px-10 md:py-28"><div className="mx-auto grid max-w-[1320px] gap-12 md:grid-cols-[.8fr_1.2fr] md:items-center"><div><p className="mb-4 text-[11px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Le journal Revizit</p><h2 className="font-display text-5xl leading-[.95] tracking-[-.04em] md:text-6xl">Des idées à<br/><i className="font-normal">porter.</i></h2><p className="mt-6 max-w-sm text-sm leading-7 text-black/55">Rencontres, matières, silhouettes et regards : entrez dans les coulisses de notre communauté créative.</p><a href="#journal" className="mt-7 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-widest">Lire les histoires <ArrowRight/></a></div><div className="grid gap-5 md:grid-cols-2"><article className="rounded-[24px] bg-[var(--paper)] p-6"><p className="text-[10px] font-bold uppercase tracking-widest text-[var(--rust)]">Carnet de matière</p><h3 className="mt-12 font-display text-2xl">Pourquoi le tissé revient au centre.</h3><p className="mt-4 text-xs leading-6 text-black/50">Le geste, la texture et ce que nos vêtements gardent de nos territoires.</p></article><article className="rounded-[24px] bg-[var(--cobalt)] p-6 text-white"><Instagram className="text-[var(--gold)]"/><h3 className="mt-12 font-display text-2xl">Suivez le mouvement.</h3><p className="mt-4 text-xs leading-6 text-white/60">@revizit.ci · Des histoires en images, chaque semaine.</p></article></div></div></section>
-    <section id="story" className="relative overflow-hidden bg-[var(--cobalt)] px-5 py-24 text-white md:px-10 md:py-32"><div className="noise absolute inset-0"/><div className="relative mx-auto grid max-w-[1320px] items-center gap-12 md:grid-cols-[.8fr_1.2fr]"><div><Sparkles className="mb-8 text-[var(--gold)]"/><p className="mb-5 text-[11px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">Le geste avant la tendance</p><h2 className="font-display text-5xl leading-[.95] tracking-[-.04em] md:text-7xl">Porter une histoire.<br/><i className="font-normal text-[var(--gold)]">Pas un costume.</i></h2><p className="mt-8 max-w-md text-base leading-7 text-white/65">Nous travaillons avec des ateliers et des créateurs qui font de la matière un langage. Chaque pièce est pensée pour durer, évoluer et vous ressembler.</p><a href="#journal" className="mt-8 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-[var(--gold)]">Notre manifeste <ArrowRight/></a></div><div className="relative aspect-[1.3] overflow-hidden rounded-[32px] md:rotate-2"><Image src="/collection-heritage.png" fill className="object-cover" alt="Artisan travaillant un textile"/></div></div></section>
-    <section className="bg-[var(--rust)] px-5 py-20 text-white md:px-10 md:py-24"><div className="mx-auto flex max-w-[1320px] flex-col gap-8 md:flex-row md:items-end md:justify-between"><div><p className="text-[11px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">La lettre Revizit</p><h2 className="mt-4 max-w-xl font-display text-5xl leading-[.95] tracking-[-.04em] md:text-6xl">Recevez le prochain<br/><i className="font-normal text-[var(--gold)]">mouvement.</i></h2></div><form className="flex w-full max-w-md gap-2 border-b border-white/50 pb-3" onSubmit={(event) => event.preventDefault()}><label htmlFor="newsletter" className="sr-only">Votre adresse email</label><input id="newsletter" type="email" required placeholder="votre@email.com" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/60"/><button type="submit" aria-label="S’inscrire à la newsletter" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">S’inscrire <ArrowRight/></button></form></div></section>
-    <footer id="journal" className="mx-auto flex max-w-[1320px] flex-col gap-10 px-5 py-14 md:px-10"><div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]"><div><p className="font-display text-3xl">Revizit<span className="text-[var(--rust)]">.</span></p><p className="mt-2 max-w-xs text-sm leading-6 text-black/50">La mode, en héritage. Des pièces conscientes, créées en Côte d’Ivoire.</p></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Boutique</p><div className="mt-4 flex flex-col gap-3 text-sm"><a href="#shop">Nouveautés</a><a href="#shop">Vêtements</a><a href="#shop">Accessoires</a></div></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Aide</p><div className="mt-4 flex flex-col gap-3 text-sm"><a href="mailto:bonjour@revizit.ci">Contact</a><a href="#story">Livraison & retours</a><a href="#story">FAQ</a></div></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Suivez-nous</p><div className="mt-4 flex gap-4 text-sm"><a href="#journal" aria-label="Instagram Revizit"><Instagram/></a><a href="mailto:bonjour@revizit.ci">Email</a></div></div></div><div className="flex flex-col gap-3 border-t border-black/10 pt-6 text-xs uppercase tracking-widest text-black/40 md:flex-row md:items-center md:justify-between"><span>© 2026 Revizit · Abidjan</span><span>Conçu avec intention</span></div></footer>
+  return (
+    <main className="min-h-screen overflow-hidden bg-[var(--paper)]">
+      {/* Ambient background */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="ambient ambient-one" />
+        <div className="ambient ambient-two" />
+      </div>
 
-    {selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Détails de ${selected.name}`} onClick={() => setSelected(null)}><div className="product-modal grid max-h-[90vh] w-full max-w-3xl overflow-auto rounded-[30px] bg-[var(--paper)] md:grid-cols-2" onClick={(event) => event.stopPropagation()}><div className="relative min-h-80"><Image src={selected.image} fill className="object-cover" alt={selected.name}/></div><div className="flex flex-col p-7 md:p-10"><button onClick={() => setSelected(null)} aria-label="Fermer" className="ml-auto rounded-full p-2 hover:bg-black/5"><X/></button><p className="mt-5 text-[10px] font-bold uppercase tracking-widest text-[var(--rust)]">{selected.tag}</p><h2 className="mt-3 font-display text-4xl">{selected.name}</h2><p className="mt-2 text-sm text-black/50">{selected.detail}</p><p className="mt-7 text-sm leading-7 text-black/65">{selected.description}</p><div className="mt-auto flex items-center justify-between gap-4 pt-10"><strong className="text-lg">{money(selected.price)}</strong><button onClick={() => { addToCart(selected); setSelected(null); setCartOpen(true) }} className="rounded-full bg-[var(--rust)] px-5 py-4 text-xs font-bold uppercase tracking-widest text-white">Ajouter au panier</button></div></div></div></div>}
-    {cartOpen && <div className="fixed inset-0 z-50 bg-black/35" role="dialog" aria-modal="true" aria-label="Votre panier" onClick={() => setCartOpen(false)}><aside className="cart-drawer ml-auto flex h-full w-full max-w-md flex-col bg-[var(--paper)] p-6 shadow-2xl md:p-8" onClick={(event) => event.stopPropagation()}><div className="flex items-center justify-between border-b border-black/10 pb-5"><div><p className="text-[10px] font-bold uppercase tracking-widest text-[var(--rust)]">Votre sélection</p><h2 className="font-display text-3xl">Le panier <span className="text-black/35">({cartCount})</span></h2></div><button onClick={() => setCartOpen(false)} aria-label="Fermer le panier" className="rounded-full p-2 hover:bg-black/5"><X/></button></div>{cartItems.length ? <><div className="flex flex-1 flex-col gap-5 overflow-y-auto py-6">{cartItems.map((item) => <div key={item.name} className="flex gap-4"><div className="relative size-20 shrink-0 overflow-hidden rounded-2xl"><Image src={item.image} fill className="object-cover" alt=""/></div><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><p className="font-display text-xl">{item.name}</p><p className="text-sm font-bold">{money(item.price * cart[item.name])}</p></div><p className="mt-1 text-xs text-black/50">{item.detail}</p><div className="mt-3 flex items-center gap-3"><button onClick={() => removeFromCart(item.name)} aria-label={`Retirer une unité de ${item.name}`} className="flex size-7 items-center justify-center rounded-full border border-black/15"><Minus/></button><span className="w-3 text-center text-sm">{cart[item.name]}</span><button onClick={() => addToCart(item)} aria-label={`Ajouter une unité de ${item.name}`} className="flex size-7 items-center justify-center rounded-full border border-black/15"><Plus/></button></div></div></div>)}</div><div className="border-t border-black/10 pt-5"><div className="flex items-center justify-between"><span className="text-sm text-black/55">Total</span><strong className="text-xl">{money(cartTotal)}</strong></div><button onClick={() => alert('Merci pour votre visite. Le paiement sera bientôt disponible.')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--ink)] py-4 text-xs font-bold uppercase tracking-widest text-white">Passer au paiement <Check/></button><p className="mt-3 text-center text-[10px] text-black/45">Paiement sécurisé · Wave disponible</p></div></> : <div className="flex flex-1 flex-col items-center justify-center text-center"><ShoppingBag className="size-10 text-black/20"/><p className="mt-5 font-display text-3xl">Votre panier est vide.</p><button onClick={() => setCartOpen(false)} className="mt-5 rounded-full bg-[var(--rust)] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white">Continuer mes achats</button></div>}</aside></div>}
-  </main>
+      {/* Announcement bar */}
+      <motion.div initial={{ y: -40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="relative z-20 bg-[var(--cobalt)] px-5 py-2 text-center text-[10px] font-bold uppercase tracking-[.25em] text-white">
+        Livraison offerte à Abidjan dès 75 000 FCFA <span className="mx-2 text-[var(--gold)]">✦</span>
+      </motion.div>
+
+      {/* Header */}
+      <motion.header initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="relative z-20 mx-auto flex max-w-[1320px] items-center justify-between px-5 py-5 md:px-10 md:py-6">
+        <button aria-label="Menu" onClick={() => setMenu(!menu)} className="flex size-10 items-center justify-center rounded-full border border-black/10 md:hidden">
+          {menu ? <X /> : <Menu />}
+        </button>
+        <a href="/" className="font-display text-2xl font-semibold tracking-tight">
+          Revizit<span className="text-[var(--rust)]">.</span>
+        </a>
+        <nav className={`${menu ? 'flex' : 'hidden'} absolute left-4 right-4 top-16 flex-col gap-4 rounded-2xl bg-[var(--ink)] p-5 text-white md:static md:flex md:flex-row md:items-center md:gap-8 md:bg-transparent md:p-0 md:text-[var(--ink)]`}>
+          <a href="#arrivals" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Arrivages</a>
+          <a href="#collections" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Collections</a>
+          <a href="#shop" onClick={() => setMenu(false)} className="text-xs font-bold uppercase tracking-[.18em]">Boutique</a>
+        </nav>
+        <button aria-label="Panier" onClick={() => setCartOpen(true)} className="relative flex size-10 items-center justify-center rounded-full bg-[var(--ink)] text-white transition hover:scale-110">
+          <ShoppingBag size={18} />
+          {cartCount > 0 && <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[var(--rust)] text-[8px] font-bold">{cartCount}</span>}
+        </button>
+      </motion.header>
+
+      {/* ========== HERO SECTION ========== */}
+      <motion.section variants={containerVariants} initial="hidden" animate="visible" className="mx-auto grid max-w-[1320px] gap-8 px-5 py-12 md:grid-cols-[1.1fr_.9fr] md:items-center md:px-10 md:py-16">
+        <motion.div variants={itemVariants} className="relative z-10 space-y-6">
+          <motion.p variants={textVariants} className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.3em] text-[var(--rust)]">
+            <span className="size-1.5 rounded-full bg-[var(--rust)]" /> Collection 01 · Héritage
+          </motion.p>
+          <motion.h1 variants={textVariants} className="font-display text-5xl leading-[.9] tracking-[-.04em] md:text-6xl">
+            L'Afrique<br /><i className="font-normal text-[var(--rust)]">en mouvement.</i>
+          </motion.h1>
+          <motion.p variants={textVariants} className="max-w-sm text-sm leading-6 text-black/60">
+            Des pièces qui racontent nos terres, nos gestes et celles et ceux qui les font vivre.
+          </motion.p>
+          <motion.a href="#shop" variants={textVariants} className="inline-flex items-center gap-3 rounded-full bg-[var(--rust)] px-6 py-3 text-xs font-bold uppercase tracking-[.18em] text-white transition hover:scale-105">
+            Découvrir <ArrowRight size={16} />
+          </motion.a>
+        </motion.div>
+        <motion.div variants={itemVariants} className="relative h-80 md:h-96">
+          <motion.div className="absolute inset-4 rotate-2 rounded-[40px] bg-[var(--gold)]/25" />
+          <div className="relative h-full overflow-hidden rounded-[40px] bg-[var(--cobalt)]">
+            <Image src="/hero-fashion.png" fill priority className="object-cover object-center opacity-90 transition hover:scale-105" alt="Modèle Revizit" />
+          </div>
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.6 }} className="absolute -bottom-2 -left-3 flex size-24 items-center justify-center rounded-full bg-[var(--gold)] text-center text-[9px] font-bold uppercase leading-3 tracking-widest text-[var(--ink)]">
+            Fait en<br />Côte d'Ivoire
+          </motion.div>
+        </motion.div>
+      </motion.section>
+
+      {/* ========== MARQUEE ========== */}
+      <div className="overflow-hidden border-y border-black/10 bg-[var(--cream)]">
+        <motion.div animate={{ x: -500 }} transition={{ repeat: Infinity, duration: 20, ease: 'linear' }} className="flex w-max gap-8 py-3 whitespace-nowrap text-[10px] font-bold uppercase tracking-[.25em]">
+          {Array.from({ length: 6 }, (_, i) => (
+            <span key={i} className="flex items-center gap-8">
+              Design conscient <b className="text-[var(--rust)]">✦</b> Créé en Côte d'Ivoire <b className="text-[var(--rust)]">✦</b>
+            </span>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* ========== ARRIVALS SECTION ========== */}
+      <motion.section id="arrivals" initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true, margin: '-100px' }} className="mx-auto max-w-[1320px] px-5 py-12 md:px-10 md:py-16">
+        <motion.div variants={itemVariants} className="mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Dernières arrivées</p>
+          <h2 className="font-display text-4xl leading-[.9] tracking-[-.04em] md:text-5xl">Nouvelles pièces<br /><i className="font-normal">chaque semaine.</i></h2>
+        </motion.div>
+        <motion.div variants={containerVariants} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredProducts.map((p) => (
+            <motion.div key={p.name} variants={itemVariants} className="group">
+              <div className="relative aspect-[.85] overflow-hidden rounded-2xl bg-[var(--cream)]">
+                <Image src={p.image} fill className="object-cover transition duration-700 group-hover:scale-105" alt={p.name} />
+                <span className="absolute left-3 top-3 rounded-full bg-[var(--paper)] px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider">{p.tag}</span>
+                <motion.button whileHover={{ scale: 1.1 }} onClick={() => setLiked(liked.includes(p.name) ? liked.filter((n) => n !== p.name) : [...liked, p.name])} className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-[var(--paper)] transition">
+                  <Heart size={16} className={liked.includes(p.name) ? 'fill-[var(--rust)] text-[var(--rust)]' : ''} />
+                </motion.button>
+              </div>
+              <div className="mt-3">
+                <h3 className="font-display text-lg">{p.name}</h3>
+                <p className="text-xs text-black/50">{p.detail}</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="font-bold">{money(p.price)}</span>
+                  <motion.button whileHover={{ scale: 1.05 }} onClick={() => addToCart(p)} className="rounded-full bg-[var(--rust)] px-3 py-2 text-xs font-bold text-white transition">
+                    <ShoppingBag size={14} />
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* ========== COLLECTIONS SECTION ========== */}
+      <motion.section id="collections" initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true, margin: '-100px' }} className="mx-auto max-w-[1320px] px-5 py-12 md:px-10 md:py-16">
+        <motion.div variants={itemVariants} className="mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Explorer</p>
+          <h2 className="font-display text-4xl leading-[.9] tracking-[-.04em] md:text-5xl">Univers <i className="font-normal">à découvrir.</i></h2>
+        </motion.div>
+        <motion.div variants={containerVariants} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {[
+            { name: 'Femme', detail: 'Robes · Ensembles', image: '/hero-fashion.png' },
+            { name: 'Homme', detail: 'Chemises · Boubous', image: '/product-indigo.png' },
+            { name: 'Enfants', detail: 'Cérémonie · Quotidien', image: '/collection-heritage.png' },
+            { name: 'Accessoires', detail: 'Sacs · Bijoux', image: '/collection-heritage.png' },
+            { name: 'Ongles', detail: 'Press-on · Nail art', image: '/product-indigo.png' },
+          ].map((item, idx) => (
+            <motion.a href="#shop" key={item.name} variants={itemVariants} className="group relative min-h-56 overflow-hidden rounded-2xl bg-[var(--ink)] text-white">
+              <Image src={item.image} fill className="object-cover opacity-60 transition duration-700 group-hover:scale-110 group-hover:opacity-75" alt={item.name} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute inset-0 flex flex-col justify-end p-4">
+                <span className="text-[8px] font-bold tracking-widest text-[var(--gold)]">0{idx + 1}</span>
+                <h3 className="font-display text-2xl">{item.name}</h3>
+                <p className="text-xs text-white/60">{item.detail}</p>
+              </div>
+            </motion.a>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* ========== PRODUCTS SECTION ========== */}
+      <motion.section id="shop" initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true, margin: '-100px' }} className="mx-auto max-w-[1320px] px-5 py-12 md:px-10 md:py-16">
+        <motion.div variants={itemVariants} className="mb-10 grid gap-6 md:grid-cols-[1.2fr_.8fr]">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Sélection</p>
+            <h2 className="font-display text-4xl leading-[.9] tracking-[-.04em] md:text-5xl">Pièces <i className="font-normal">singulières.</i></h2>
+          </div>
+          <div className="relative min-h-40 overflow-hidden rounded-2xl bg-[var(--cobalt)]">
+            <Image src="/product-indigo.png" fill className="object-cover opacity-50" alt="Featured" />
+            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent p-6 text-white">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--gold)]">Coup de cœur</p>
+              <h3 className="mt-2 font-display text-2xl">L'indigo revient en force</h3>
+            </div>
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* ========== TESTIMONIALS SECTION ========== */}
+      <motion.section initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true, margin: '-100px' }} className="bg-[var(--cream)] px-5 py-12 md:px-10 md:py-16">
+        <motion.div variants={itemVariants} className="mx-auto max-w-[1320px]">
+          <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--rust)]">Avis clients</p>
+          <h2 className="font-display text-4xl leading-[.9] tracking-[-.04em] md:text-5xl">Celles et ceux qui<br /><i className="font-normal">portent Revizit.</i></h2>
+        </motion.div>
+        <motion.div variants={containerVariants} className="mx-auto grid max-w-[1320px] gap-4 px-5 pt-10 sm:grid-cols-2 lg:grid-cols-3 md:px-10">
+          {testimonials.map((t) => (
+            <motion.div key={t.author} variants={itemVariants} className="rounded-2xl border border-black/10 bg-white p-6">
+              <div className="flex gap-1">
+                {Array.from({ length: t.rating }, (_, i) => <Star key={i} size={14} className="fill-[var(--rust)] text-[var(--rust)]" />)}
+              </div>
+              <p className="mt-3 text-sm leading-6">"{t.text}"</p>
+              <p className="mt-4 font-bold text-sm">{t.author}</p>
+              <p className="text-xs text-black/50">{t.role}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* ========== NEWSLETTER SECTION ========== */}
+      <motion.section initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true, margin: '-100px' }} className="bg-[var(--rust)] px-5 py-14 text-white md:px-10 md:py-18">
+        <motion.div variants={itemVariants} className="mx-auto max-w-[1320px]">
+          <div className="grid gap-8 md:grid-cols-[1.2fr_.8fr] md:items-end">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[var(--gold)]">Lettre Revizit</p>
+              <h2 className="mt-2 font-display text-4xl leading-[.9] tracking-[-.04em] md:text-5xl">Recevez le<br /><i className="font-normal text-[var(--gold)]">prochain mouvement.</i></h2>
+              <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">Soyez les premiers à découvrir nos nouvelles pièces et nos histoires.</p>
+            </div>
+            <motion.form variants={textVariants} className="flex w-full gap-2 border-b border-white/40 pb-3" onSubmit={(e) => e.preventDefault()}>
+              <input type="email" required placeholder="votre@email.com" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/50" />
+              <button type="submit" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[var(--gold)]">
+                S'inscrire <ArrowRight size={14} />
+              </button>
+            </motion.form>
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* ========== FOOTER ========== */}
+      <motion.footer initial="hidden" whileInView="visible" variants={containerVariants} viewport={{ once: true }} className="border-t border-black/10 px-5 py-10 md:px-10 md:py-12">
+        <div className="mx-auto grid max-w-[1320px] gap-8 md:grid-cols-4">
+          <motion.div variants={itemVariants}>
+            <p className="font-display text-2xl">Revizit<span className="text-[var(--rust)]">.</span></p>
+            <p className="mt-2 text-xs leading-5 text-black/50">La mode, en héritage. Des pièces conscientes, créées en Côte d'Ivoire.</p>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Boutique</p>
+            <div className="mt-4 flex flex-col gap-2 text-xs">
+              <a href="#" className="transition hover:text-[var(--rust)]">Nouveautés</a>
+              <a href="#" className="transition hover:text-[var(--rust)]">Vêtements</a>
+              <a href="#" className="transition hover:text-[var(--rust)]">Accessoires</a>
+            </div>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Support</p>
+            <div className="mt-4 flex flex-col gap-2 text-xs">
+              <a href="mailto:bonjour@revizit.ci" className="transition hover:text-[var(--rust)]">Contact</a>
+              <a href="#" className="transition hover:text-[var(--rust)]">Livraison</a>
+              <a href="#" className="transition hover:text-[var(--rust)]">Retours</a>
+            </div>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Suivez-nous</p>
+            <div className="mt-4 flex items-center gap-3">
+              <a href="#" className="transition hover:text-[var(--rust)]"><Instagram size={16} /></a>
+              <a href="#" className="transition hover:text-[var(--rust)]"><Mail size={16} /></a>
+            </div>
+            <p className="mt-4 text-xs text-black/40">@revizit.ci</p>
+          </motion.div>
+        </div>
+        <motion.div variants={textVariants} className="mt-8 border-t border-black/10 pt-6 text-center text-xs text-black/40">
+          © 2024 Revizit. Tous droits réservés. • Design & Code by v0
+        </motion.div>
+      </motion.footer>
+
+      {/* ========== CART DRAWER ========== */}
+      <AnimatePresence>
+        {cartOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCartOpen(false)} className="fixed inset-0 z-50 bg-black/40">
+            <motion.div initial={{ x: 400 }} animate={{ x: 0 }} exit={{ x: 400 }} transition={{ type: 'spring', damping: 25 }} onClick={(e) => e.stopPropagation()} className="absolute right-0 top-0 h-full w-full max-w-sm overflow-y-auto bg-[var(--paper)]">
+              <div className="flex items-center justify-between border-b border-black/10 px-6 py-5">
+                <h2 className="font-display text-2xl">Panier</h2>
+                <button onClick={() => setCartOpen(false)} className="rounded-full hover:bg-black/5 p-2">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 p-6">
+                {cartItems.length === 0 ? (
+                  <p className="text-center text-sm text-black/50 py-10">Votre panier est vide</p>
+                ) : (
+                  <div className="space-y-4">
+                    {cartItems.map((p) => (
+                      <motion.div key={p.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4 border-b border-black/10 pb-4">
+                        <div className="relative h-20 w-16 overflow-hidden rounded-lg bg-[var(--cream)]">
+                          <Image src={p.image} fill className="object-cover" alt={p.name} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm font-bold">{p.name}</h3>
+                          <p className="text-xs text-black/50">{money(p.price)}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <button onClick={() => removeFromCart(p.name)} className="rounded-full bg-[var(--cream)] px-2 py-1 text-xs">−</button>
+                            <span className="text-xs font-bold">{cart[p.name]}</span>
+                            <button onClick={() => addToCart(p)} className="rounded-full bg-[var(--cream)] px-2 py-1 text-xs">+</button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {cartItems.length > 0 && (
+                <div className="border-t border-black/10 p-6 space-y-3">
+                  <div className="flex justify-between text-sm font-bold">
+                    <span>Total</span>
+                    <span>{money(cartTotal)}</span>
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full rounded-full bg-[var(--rust)] py-3 text-xs font-bold uppercase tracking-widest text-white">
+                    Commander
+                  </motion.button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========== PRODUCT MODAL ========== */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelected(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-5">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-[var(--paper)]">
+              <button onClick={() => setSelected(null)} className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 transition hover:scale-110">
+                <X size={20} />
+              </button>
+              <div className="grid gap-6 p-6 md:grid-cols-[1fr_1.2fr]">
+                <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--cream)]">
+                  <Image src={selected.image} fill className="object-cover" alt={selected.name} />
+                </div>
+                <div>
+                  <span className="inline-block rounded-full bg-[var(--cream)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider">{selected.tag}</span>
+                  <h2 className="mt-3 font-display text-4xl">{selected.name}</h2>
+                  <p className="mt-2 text-sm text-black/60">{selected.detail}</p>
+                  <p className="mt-4 font-display text-2xl text-[var(--rust)]">{money(selected.price)}</p>
+                  <p className="mt-4 text-sm leading-6 text-black/60">{selected.description}</p>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { addToCart(selected); setCartOpen(true); setSelected(null); }} className="mt-6 w-full rounded-full bg-[var(--rust)] py-3 text-xs font-bold uppercase tracking-widest text-white">
+                    Ajouter au panier
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
+  )
 }

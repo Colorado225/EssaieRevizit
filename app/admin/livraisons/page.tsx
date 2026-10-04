@@ -19,4 +19,3 @@ export default function LivraisonsPage() {
     </div></main>
 }
 
-export const metadata = { title: 'Livraisons — Revizit' }

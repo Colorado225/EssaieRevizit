@@ -9,8 +9,10 @@ body { margin:0; background:var(--paper); color:var(--ink); font-family:'DM Sans
 ::selection { background:var(--rust); color:white; }
 @keyframes drift { 0%,100% { transform:translate3d(0,0,0) rotate(0deg); } 50% { transform:translate3d(18px,-12px,0) rotate(2deg); } }
 @keyframes marquee { to { transform:translateX(-50%); } }
+@keyframes scroll-up { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
 .drift { animation:drift 9s ease-in-out infinite; }
 .marquee-track { animation:marquee 28s linear infinite; }
+.scroll-up { animation:scroll-up 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 
 /* Layered motion keeps the storefront alive without distracting from products. */
 @keyframes reveal-up { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
